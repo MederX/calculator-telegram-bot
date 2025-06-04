@@ -1,4 +1,5 @@
-module github.com/MederX/telegram-calculator-bot
+module github.com/MederX/calculator-telegram-bot
+
 
 go 1.21
 
