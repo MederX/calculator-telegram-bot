@@ -1,1 +1,1 @@
-web: ./calculator-telegram-bot
+web: ./main.go
