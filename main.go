@@ -228,12 +228,12 @@ func (h *BotHandler) Start(ctx context.Context) error {
 
 	updates := h.bot.GetUpdatesChan(u)
 
-	log.Println("🤖 Бот запущен и готов к работе!")
+	log.Println("Бот запущен и готов к работе!")
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("📴 Получен сигнал остановки, завершаем работу...")
+			log.Println("Получен сигнал остановки, завершаем работу...")
 			h.bot.StopReceivingUpdates()
 			return ctx.Err()
 
@@ -256,8 +256,7 @@ func main() {
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
-		botToken = "7566241176:AAHIsMArqeqDEM8LxDv-9Rvh5zPmQCxa2a4"
-		log.Println("⚠️  Используется токен по умолчанию. Рекомендуется установить TELEGRAM_BOT_TOKEN")
+		log.Fatal("Не указан токен бота TELEGRAM_BOT_TOKEN")
 	}
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
