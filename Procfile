@@ -1,1 +1,1 @@
-web: ./telegram-calculator-bot
+web: ./calculator-telegram-bot
