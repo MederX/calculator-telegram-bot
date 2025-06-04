@@ -1,0 +1,24 @@
+# Бинарные файлы
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+telegram-calculator-bot
+
+# Тестовые файлы
+*.test
+*.out
+
+# Зависимости
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# Логи
+*.log
+
+# Переменные окружения
+.env

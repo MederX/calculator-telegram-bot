@@ -1,0 +1,1 @@
+web: ./telegram-calculator-bot
