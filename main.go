@@ -21,12 +21,10 @@ const (
 	requestTimeout      = 30 * time.Second
 )
 
-// Calculator представляет калькулятор с расширенными возможностями
 type Calculator struct {
 	supportedOps map[string]func(float64, float64) (float64, error)
 }
 
-// NewCalculator создает новый экземпляр калькулятора
 func NewCalculator() *Calculator {
 	return &Calculator{
 		supportedOps: map[string]func(float64, float64) (float64, error){
@@ -58,7 +56,6 @@ func NewCalculator() *Calculator {
 	}
 }
 
-// validateExpression проверяет корректность выражения
 func (c *Calculator) validateExpression(expr string) error {
 	if len(expr) > maxExpressionLength {
 		return fmt.Errorf("выражение слишком длинное (максимум %d символов)", maxExpressionLength)
@@ -68,7 +65,6 @@ func (c *Calculator) validateExpression(expr string) error {
 		return fmt.Errorf("пустое выражение")
 	}
 
-	// Проверка на подозрительные символы
 	validChars := regexp.MustCompile(`^[0-9+\-*/×÷^%().\s]+$`)
 	if !validChars.MatchString(expr) {
 		return fmt.Errorf("выражение содержит недопустимые символы")
@@ -76,21 +72,16 @@ func (c *Calculator) validateExpression(expr string) error {
 
 	return nil
 }
-
-// parseExpression разбирает выражение и находит операцию
 func (c *Calculator) parseExpression(expr string) (float64, string, float64, error) {
 	expr = strings.ReplaceAll(expr, " ", "")
 
-	// Поиск операторов в порядке приоритета (сначала двухсимвольные)
 	operators := []string{"**", "÷", "×", "^", "%", "/", "*", "+", "-"}
 
 	for _, op := range operators {
-		// Для операторов - и +, нужно учитывать, что они могут быть знаками числа
+
 		if op == "-" || op == "+" {
-			// Ищем операторы не в начале строки и не после другого операторного символа
 			for i := 1; i < len(expr); i++ {
 				if string(expr[i]) == op {
-					// Проверяем, что это не знак числа
 					prevChar := expr[i-1]
 					if prevChar >= '0' && prevChar <= '9' || prevChar == ')' {
 						left := expr[:i]
@@ -106,7 +97,6 @@ func (c *Calculator) parseExpression(expr string) (float64, string, float64, err
 				}
 			}
 		} else {
-			// Для других операторов просто ищем первое вхождение
 			if idx := strings.Index(expr, op); idx > 0 {
 				left := expr[:idx]
 				right := expr[idx+len(op):]
@@ -124,7 +114,6 @@ func (c *Calculator) parseExpression(expr string) (float64, string, float64, err
 	return 0, "", 0, fmt.Errorf("операция не найдена или неправильный формат")
 }
 
-// Calculate выполняет вычисление выражения
 func (c *Calculator) Calculate(expr string) (string, error) {
 	if err := c.validateExpression(expr); err != nil {
 		return "", err
@@ -144,8 +133,6 @@ func (c *Calculator) Calculate(expr string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// Проверка на переполнение и NaN
 	if math.IsInf(result, 0) {
 		return "", fmt.Errorf("результат слишком велик")
 	}
@@ -153,20 +140,17 @@ func (c *Calculator) Calculate(expr string) (string, error) {
 		return "", fmt.Errorf("результат не является числом")
 	}
 
-	// Форматирование результата
 	if result == float64(int64(result)) {
 		return fmt.Sprintf("%.0f", result), nil
 	}
 	return fmt.Sprintf("%.6g", result), nil
 }
 
-// BotHandler обрабатывает сообщения бота
 type BotHandler struct {
 	bot        *tgbotapi.BotAPI
 	calculator *Calculator
 }
 
-// NewBotHandler создает новый обработчик бота
 func NewBotHandler(bot *tgbotapi.BotAPI) *BotHandler {
 	return &BotHandler{
 		bot:        bot,
@@ -174,7 +158,6 @@ func NewBotHandler(bot *tgbotapi.BotAPI) *BotHandler {
 	}
 }
 
-// handleMessage обрабатывает входящее сообщение
 func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 	if message == nil || message.Text == "" {
 		return
@@ -183,10 +166,9 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 	var reply string
 	text := strings.TrimSpace(message.Text)
 
-	// Команды бота
 	switch {
 	case text == "/start":
-		reply = `👋 Привет! Я калькулятор-бот.
+		reply = `Привет! Я калькулятор-бот.
 		
 Поддерживаемые операции:
 • Сложение: +
@@ -206,7 +188,7 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 Просто отправьте мне математическое выражение!`
 
 	case text == "/help":
-		reply = `📖 Справка по использованию:
+		reply = `Справка по использованию:
 
 Отправьте математическое выражение в формате: число операция число
 
@@ -218,22 +200,20 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 • 2 ^ 10
 • 17 % 5
 
-⚠️ Ограничения:
+Ограничения:
 • Максимум 100 символов
 • Только простые выражения (два числа и одна операция)
 • Деление на ноль запрещено`
 
 	default:
-		// Попытка вычислить выражение
 		result, err := h.calculator.Calculate(text)
 		if err != nil {
-			reply = "❌ Ошибка: " + err.Error() + "\n\nИспользуйте /help для получения справки."
+			reply = "Ошибка: " + err.Error() + "\n\nИспользуйте /help для получения справки."
 		} else {
-			reply = "✅ Результат: " + result
+			reply = "✅Результат: " + result
 		}
 	}
 
-	// Отправка ответа
 	msg := tgbotapi.NewMessage(message.Chat.ID, reply)
 	msg.ReplyToMessageID = message.MessageID
 
@@ -242,7 +222,6 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 	}
 }
 
-// Start запускает обработку сообщений
 func (h *BotHandler) Start(ctx context.Context) error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -259,7 +238,6 @@ func (h *BotHandler) Start(ctx context.Context) error {
 			return ctx.Err()
 
 		case update := <-updates:
-			// Обработка в отдельной горутине для неблокирующей работы
 			go func(upd tgbotapi.Update) {
 				defer func() {
 					if r := recover(); r != nil {
@@ -274,54 +252,41 @@ func (h *BotHandler) Start(ctx context.Context) error {
 }
 
 func main() {
-	// Настройка логирования
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// Получение токена бота
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
-		// Fallback для разработки (уберите в продакшене!)
 		botToken = "7566241176:AAHIsMArqeqDEM8LxDv-9Rvh5zPmQCxa2a4"
 		log.Println("⚠️  Используется токен по умолчанию. Рекомендуется установить TELEGRAM_BOT_TOKEN")
 	}
 
-	// Создание бота
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
-		log.Fatalf("❌ Ошибка создания бота: %v", err)
+		log.Fatalf("Ошибка создания бота: %v", err)
 	}
-
-	// Настройка отладки (можно включить через переменную окружения)
 	if os.Getenv("DEBUG") == "true" {
 		bot.Debug = true
 	}
 
-	log.Printf("✅ Авторизован как @%s", bot.Self.UserName)
+	log.Printf("Авторизован как @%s", bot.Self.UserName)
 
-	// Создание обработчика
 	handler := NewBotHandler(bot)
 
-	// Настройка graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Канал для получения сигналов ОС
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	// Запуск бота в отдельной горутине
 	go func() {
 		if err := handler.Start(ctx); err != nil && err != context.Canceled {
-			log.Printf("❌ Ошибка работы бота: %v", err)
+			log.Printf("Ошибка работы бота: %v", err)
 		}
 	}()
 
-	// Ожидание сигнала завершения
 	<-sigChan
-	log.Println("📴 Получен сигнал завершения...")
+	log.Println("Получен сигнал завершения...")
 	cancel()
 
-	// Ожидание завершения всех горутин
 	time.Sleep(2 * time.Second)
-	log.Println("👋 Бот остановлен")
+	log.Println("Бот остановлен")
 }
