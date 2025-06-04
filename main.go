@@ -72,13 +72,13 @@ func (c *Calculator) validateExpression(expr string) error {
 
 	return nil
 }
+
 func (c *Calculator) parseExpression(expr string) (float64, string, float64, error) {
 	expr = strings.ReplaceAll(expr, " ", "")
 
 	operators := []string{"**", "÷", "×", "^", "%", "/", "*", "+", "-"}
 
 	for _, op := range operators {
-
 		if op == "-" || op == "+" {
 			for i := 1; i < len(expr); i++ {
 				if string(expr[i]) == op {
@@ -163,6 +163,8 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 		return
 	}
 
+	log.Printf("Получено сообщение: %s", message.Text)
+
 	var reply string
 	text := strings.TrimSpace(message.Text)
 
@@ -223,6 +225,14 @@ func (h *BotHandler) handleMessage(message *tgbotapi.Message) {
 }
 
 func (h *BotHandler) Start(ctx context.Context) error {
+	// Удаление webhook при запуске
+	_, err := h.bot.Request(tgbotapi.DeleteWebhookConfig{})
+	if err != nil {
+		log.Printf("Ошибка удаления webhook: %v", err)
+	} else {
+		log.Println("Webhook удален при запуске")
+	}
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -247,6 +257,12 @@ func (h *BotHandler) Start(ctx context.Context) error {
 
 				h.handleMessage(upd.Message)
 			}(update)
+
+		default:
+			if !h.bot.IsReceivingUpdates() {
+				log.Println("Переподключение к Telegram...")
+				updates = h.bot.GetUpdatesChan(u)
+			}
 		}
 	}
 }
